@@ -32,7 +32,9 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
+          # Upload entire repository as static site
+          # The action automatically excludes .git directory
+          # .gitignore already prevents sensitive files from being committed
           path: '.'
 
   # Deployment job
