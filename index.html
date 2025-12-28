@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Wolfenstein 3D - Retro FPS</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+</head>
+<body>
+    <!-- Menú inicial -->
+    <div id="mainMenu" class="menu-screen">
+        <div class="menu-content">
+            <h1 class="game-title">WOLFENSTEIN 3D</h1>
+            <p class="game-subtitle">Retro First Person Shooter</p>
+            <button id="startButton" class="menu-button">Començar Partida</button>
+            
+            <div class="controls-info">
+                <h3>Controls</h3>
+                <div class="controls-section">
+                    <h4>Ordinador:</h4>
+                    <ul>
+                        <li>WASD - Moure's</li>
+                        <li>Ratolí - Mirar</li>
+                        <li>Click - Disparar</li>
+                        <li>ESC - Pausa</li>
+                    </ul>
+                </div>
+                <div class="controls-section">
+                    <h4>Mòbil:</h4>
+                    <ul>
+                        <li>Joystick - Moure's</li>
+                        <li>Tàctil - Mirar</li>
+                        <li>Botó - Disparar</li>
+                        <li>Pausa - Pausar</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menú de pausa -->
+    <div id="pauseMenu" class="menu-screen" style="display: none;">
+        <div class="menu-content">
+            <h2>PAUSA</h2>
+            <button id="resumeButton" class="menu-button">Continuar</button>
+            <button id="quitButton" class="menu-button">Tornar al Menú</button>
+        </div>
+    </div>
+
+    <!-- Pantalla de Game Over -->
+    <div id="gameOverScreen" class="menu-screen" style="display: none;">
+        <div class="menu-content">
+            <h2 class="game-over-title">GAME OVER</h2>
+            <p class="game-over-message">Has mort!</p>
+            <button id="restartButton" class="menu-button">Tornar a Jugar</button>
+        </div>
+    </div>
+
+    <!-- Pantalla de Victòria -->
+    <div id="victoryScreen" class="menu-screen" style="display: none;">
+        <div class="menu-content">
+            <h2 class="victory-title">HAS GUANYAT!</h2>
+            <p class="victory-message">Has completat tots els nivells!</p>
+            <button id="playAgainButton" class="menu-button">Jugar de Nou</button>
+        </div>
+    </div>
+
+    <!-- Canvas del joc -->
+    <canvas id="renderCanvas"></canvas>
+
+    <!-- HUD -->
+    <div id="hud" style="display: none;">
+        <div class="hud-top">
+            <div class="hud-item">
+                <span class="hud-label">VIDA:</span>
+                <div class="health-bar">
+                    <div id="healthBar" class="health-bar-fill"></div>
+                </div>
+                <span id="healthText" class="hud-value">100</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">NIVELL:</span>
+                <span id="levelText" class="hud-value">1</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">ENEMICS:</span>
+                <span id="enemiesText" class="hud-value">10</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls tàctils -->
+    <div id="touchControls" style="display: none;">
+        <!-- Joystick per moure's -->
+        <div id="joystickContainer" class="joystick-container">
+            <div id="joystick" class="joystick"></div>
+        </div>
+        
+        <!-- Botó de disparo -->
+        <button id="fireButton" class="fire-button">FIRE</button>
+        
+        <!-- Botó de pausa -->
+        <button id="pauseButtonTouch" class="pause-button">⏸</button>
+    </div>
+
+    <!-- Scripts del joc (ES6 modules) -->
+    <script type="module" src="main.js"></script>
+</body>
+</html>
