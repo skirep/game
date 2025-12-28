@@ -67,15 +67,26 @@ http-server -p 8000
 
 ## 📦 Com publicar-lo a GitHub Pages
 
-1. Puja tot el projecte al teu repositori GitHub
-2. Ves a **Settings** del repositori
-3. Navega a la secció **Pages** (al menú lateral)
-4. A **Source**, selecciona:
+Aquest projecte inclou un workflow de GitHub Actions que desplega automàticament el joc a GitHub Pages.
+
+### Desplegament Automàtic
+
+1. Puja els canvis a la branca `main` del repositori
+2. El workflow de GitHub Actions es executarà automàticament
+3. El joc es desplegarà a GitHub Pages en uns minuts
+4. Visita l'URL: `https://<el-teu-usuari>.github.io/<nom-del-repo>/`
+
+### Configuració Manual (alternativa)
+
+Si prefereixes configurar-ho manualment:
+
+1. Ves a **Settings** del repositori
+2. Navega a la secció **Pages** (al menú lateral)
+3. A **Source**, selecciona:
    - Branch: `main` (o `master`)
    - Folder: `/ (root)`
-5. Clica **Save**
-6. Espera uns segons i refresca la pàgina
-7. Veuràs l'URL del teu joc publicat!
+4. Clica **Save**
+5. Espera uns segons i refresca la pàgina
 
 L'URL serà: `https://<el-teu-usuari>.github.io/<nom-del-repo>/`
 
