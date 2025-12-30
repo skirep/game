@@ -25,6 +25,8 @@ public class EditorScreen implements Screen {
     // UI elements
     private Label statusLabel;
     private TextField filenameField;
+    private TextButton playButton;
+    private TextButton stopButton;
 
     public EditorScreen() {
         stage = new Stage(new ScreenViewport());
@@ -88,6 +90,39 @@ public class EditorScreen implements Screen {
             }
         });
         toolbar.add(loadButton);
+
+        toolbar.add(new Label(" | ", skin));
+        
+        // Preview mode buttons
+        Label previewLabel = new Label("Preview:", skin);
+        toolbar.add(previewLabel);
+        
+        playButton = new TextButton("Play", skin);
+        playButton.getColor().set(0f, 0.8f, 0f, 1f); // Green
+        playButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                controller.startPreview();
+                timelineView.setPreviewMode(true);
+                updatePreviewButtons();
+                updateStatus("Preview mode started");
+            }
+        });
+        toolbar.add(playButton);
+        
+        stopButton = new TextButton("Stop", skin);
+        stopButton.getColor().set(0.8f, 0f, 0f, 1f); // Red
+        stopButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                controller.stopPreview();
+                timelineView.setPreviewMode(false);
+                updatePreviewButtons();
+                updateStatus("Preview mode stopped");
+            }
+        });
+        stopButton.setVisible(false);
+        toolbar.add(stopButton);
 
         toolbar.add(new Label(" | ", skin));
 
@@ -174,6 +209,15 @@ public class EditorScreen implements Screen {
     private void updateStatus(String message) {
         statusLabel.setText(message);
     }
+    
+    /**
+     * Updates the visibility of preview buttons based on preview mode state.
+     */
+    private void updatePreviewButtons() {
+        boolean isPreview = controller.isPreviewMode();
+        playButton.setVisible(!isPreview);
+        stopButton.setVisible(isPreview);
+    }
 
     @Override
     public void show() {
@@ -181,6 +225,9 @@ public class EditorScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        // Update preview mode
+        controller.updatePreview(delta);
+        
         // Handle input
         handleInput();
         timelineView.handleInput();
@@ -201,6 +248,11 @@ public class EditorScreen implements Screen {
      * Handles keyboard input.
      */
     private void handleInput() {
+        // Disable edit mode input during preview
+        if (controller.isPreviewMode()) {
+            return;
+        }
+        
         // Delete key to remove selected event
         if (Gdx.input.isKeyJustPressed(Input.Keys.DEL) || 
             Gdx.input.isKeyJustPressed(Input.Keys.FORWARD_DEL)) {

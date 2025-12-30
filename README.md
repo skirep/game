@@ -76,11 +76,22 @@ editor/
 - **New**: Create a new empty level
 - **Save**: Save current level to JSON file (specify filename in text field)
 - **Load**: Load level from JSON file
+- **Play**: Start preview mode (automatically scrolls timeline and highlights events)
+- **Stop**: Stop preview mode and return to edit mode
 - **Enemy** (Red): Add enemy spawn event at center of view
 - **Formation** (Orange): Add formation event at center of view
 - **Boss** (Purple): Add boss event at center of view
 - **PowerUp** (Green): Add power-up event at center of view
 - **Delete**: Delete currently selected event
+
+### Preview Mode
+
+- **Play Button**: Starts preview mode which:
+  - Resets timeline to time 0
+  - Automatically scrolls the camera vertically based on elapsed time
+  - Highlights events with a yellow outline when they are triggered
+  - Disables manual camera control and event editing
+- **Stop Button**: Returns to edit mode with full manual control restored
 
 ### Timeline
 

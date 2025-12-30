@@ -42,6 +42,7 @@ The Level Editor follows a clean MVC-like architecture with three main layers:
   - Purple: BOSS
   - Green: POWER_UP
 - Selection indication with outline
+- Triggered state visualization with yellow pulsing outline (in preview mode)
 
 **EditorController.java**
 - Central controller managing interactions between model and view
@@ -50,6 +51,9 @@ The Level Editor follows a clean MVC-like architecture with three main layers:
   - Event selection and deletion
   - Position updates when events are dragged
   - Save/load coordination with LevelSerializer
+  - Preview mode state management
+  - Automatic timeline scrolling during preview
+  - Event triggering and highlighting during preview
 
 **LevelSerializer.java**
 - JSON serialization/deserialization using LibGDX Json
@@ -61,10 +65,12 @@ The Level Editor follows a clean MVC-like architecture with three main layers:
 - Creates UI using Scene2D widgets
 - Toolbar with buttons for:
   - File operations (New, Save, Load)
+  - Preview mode (Play, Stop)
   - Event creation (Enemy, Formation, Boss, PowerUp)
   - Event deletion
 - Status label for user feedback
 - Coordinates input handling between UI and timeline
+- Disables edit mode input during preview
 
 ### Application Layer
 
@@ -104,6 +110,15 @@ The Level Editor follows a clean MVC-like architecture with three main layers:
 - Custom skin with predefined styles
 - Color-coded buttons match event types
 - Status label provides immediate feedback
+- Dynamic button visibility (Play/Stop toggle based on preview mode state)
+
+### Preview Mode
+- Time-based automatic scrolling at 1 second per second real-time
+- Visual feedback when events are triggered (yellow pulsing outline)
+- Disables edit controls during preview to prevent accidental modifications
+- Camera resets to time 0 when preview starts
+- All triggered states cleared when preview stops
+- No actual gameplay logic - pure visualization mode
 
 ## Extension Points
 
@@ -114,6 +129,7 @@ The architecture is designed for easy extension:
 3. **UI Enhancements**: Add new buttons/controls to EditorScreen
 4. **Validation**: Add rules in EditorController before saving
 5. **Export Formats**: Implement additional serializers alongside LevelSerializer
+6. **Preview Speed Control**: Add UI controls to adjust preview playback speed
 
 ## Testing Approach
 
@@ -124,6 +140,7 @@ The application can be tested by:
 3. **Load Test**: Load sample.json to verify deserialization
 4. **Edit Test**: Add/move/delete events to verify all operations
 5. **Save Test**: Save and reload to verify persistence
+6. **Preview Test**: Click Play to verify automatic scrolling and event highlighting
 
 ## Performance Considerations
 

@@ -15,6 +15,7 @@ import com.leveleditor.model.LevelEvent;
 public class EventActor extends Actor {
     private LevelEvent event;
     private boolean selected;
+    private boolean triggered;
     private Color color;
     private static final float SIZE = 20f;
 
@@ -26,6 +27,7 @@ public class EventActor extends Actor {
     public EventActor(LevelEvent event) {
         this.event = event;
         this.selected = false;
+        this.triggered = false;
         this.dragging = false;
 
         // Set color based on event type
@@ -76,15 +78,24 @@ public class EventActor extends Actor {
      * Renders the event as a colored circle.
      */
     public void draw(ShapeRenderer shapeRenderer, float parentAlpha) {
-        shapeRenderer.setColor(color.r, color.g, color.b, color.a * parentAlpha);
-        
         if (selected) {
             // Draw selection outline
             shapeRenderer.set(ShapeRenderer.ShapeType.Line);
+            shapeRenderer.setColor(color.r, color.g, color.b, color.a * parentAlpha);
             shapeRenderer.circle(getX() + SIZE / 2, getY() + SIZE / 2, SIZE / 2 + 3);
         }
         
+        if (triggered) {
+            // Draw triggered state with pulsing yellow outline
+            shapeRenderer.set(ShapeRenderer.ShapeType.Line);
+            shapeRenderer.setColor(1f, 1f, 0f, 1f); // Yellow
+            shapeRenderer.circle(getX() + SIZE / 2, getY() + SIZE / 2, SIZE / 2 + 5);
+            shapeRenderer.circle(getX() + SIZE / 2, getY() + SIZE / 2, SIZE / 2 + 7);
+        }
+        
+        // Draw the event circle with its proper color
         shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(color.r, color.g, color.b, color.a * parentAlpha);
         shapeRenderer.circle(getX() + SIZE / 2, getY() + SIZE / 2, SIZE / 2);
     }
 
@@ -98,6 +109,14 @@ public class EventActor extends Actor {
 
     public void setSelected(boolean selected) {
         this.selected = selected;
+    }
+    
+    public boolean isTriggered() {
+        return triggered;
+    }
+    
+    public void setTriggered(boolean triggered) {
+        this.triggered = triggered;
     }
 
     public static float getEventSize() {
