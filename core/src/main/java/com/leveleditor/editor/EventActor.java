@@ -78,11 +78,10 @@ public class EventActor extends Actor {
      * Renders the event as a colored circle.
      */
     public void draw(ShapeRenderer shapeRenderer, float parentAlpha) {
-        shapeRenderer.setColor(color.r, color.g, color.b, color.a * parentAlpha);
-        
         if (selected) {
             // Draw selection outline
             shapeRenderer.set(ShapeRenderer.ShapeType.Line);
+            shapeRenderer.setColor(color.r, color.g, color.b, color.a * parentAlpha);
             shapeRenderer.circle(getX() + SIZE / 2, getY() + SIZE / 2, SIZE / 2 + 3);
         }
         
@@ -94,6 +93,7 @@ public class EventActor extends Actor {
             shapeRenderer.circle(getX() + SIZE / 2, getY() + SIZE / 2, SIZE / 2 + 7);
         }
         
+        // Draw the event circle with its proper color
         shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(color.r, color.g, color.b, color.a * parentAlpha);
         shapeRenderer.circle(getX() + SIZE / 2, getY() + SIZE / 2, SIZE / 2);

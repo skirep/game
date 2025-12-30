@@ -159,6 +159,7 @@ public class EditorController {
             timelineView.scrollToTime(previewTime);
             
             // Check and highlight events that should be triggered
+            // Note: For large levels, consider maintaining a separate list of untriggered events
             for (EventActor actor : timelineView.getEventActors()) {
                 if (!actor.isTriggered() && actor.getEvent().time <= previewTime) {
                     actor.setTriggered(true);
