@@ -38,8 +38,11 @@ public class FormationData {
      * @return The formation if found, null otherwise
      */
     public Formation getFormationById(String id) {
+        if (id == null) {
+            return null;
+        }
         for (Formation formation : formations) {
-            if (formation.id.equals(id)) {
+            if (formation.id != null && formation.id.equals(id)) {
                 return formation;
             }
         }

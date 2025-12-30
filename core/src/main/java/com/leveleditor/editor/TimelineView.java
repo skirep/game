@@ -140,7 +140,9 @@ public class TimelineView {
             shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
             shapeRenderer.setColor(Color.LIGHT_GRAY);
             for (EventActor actor : eventActors) {
-                if (actor.getEvent().type == EventType.FORMATION && actor.getEvent().formationId != null) {
+                if (actor.getEvent().type == EventType.FORMATION && 
+                    actor.getEvent().formationId != null && 
+                    !actor.getEvent().formationId.equals("none")) {
                     Formation formation = formationData.getFormationById(actor.getEvent().formationId);
                     if (formation != null) {
                         drawFormationPreview(actor.getEvent(), formation);
