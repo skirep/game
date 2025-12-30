@@ -11,6 +11,14 @@ bower_components/
 dist/
 build/
 .cache/
+bin/
+out/
+target/
+
+# Gradle
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
 
 # Ignorar fitxers d'editors
 .vscode/
@@ -20,12 +28,17 @@ build/
 *~
 .project
 .settings/
+.classpath
+*.iml
+*.ipr
+*.iws
 
 # Ignorar fitxers de logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+hs_err_pid*
 
 # Ignorar fitxers temporals
 /tmp/
@@ -42,3 +55,6 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Java
+*.class
