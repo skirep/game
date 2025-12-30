@@ -91,6 +91,17 @@ public class EditorScreen implements Screen {
         });
         toolbar.add(loadButton);
 
+        // Manage Formations button
+        TextButton formationsButton = new TextButton("Manage Formations", skin);
+        formationsButton.getColor().set(0.3f, 0.6f, 1f, 1f); // Blue
+        formationsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                openFormationManager();
+            }
+        });
+        toolbar.add(formationsButton);
+
         toolbar.add(new Label(" | ", skin));
         
         // Preview mode buttons
@@ -217,6 +228,20 @@ public class EditorScreen implements Screen {
         boolean isPreview = controller.isPreviewMode();
         playButton.setVisible(!isPreview);
         stopButton.setVisible(isPreview);
+    }
+    
+    /**
+     * Opens the formation manager dialog.
+     */
+    private void openFormationManager() {
+        FormationManagerDialog dialog = new FormationManagerDialog(
+            "Formation Manager", 
+            skin, 
+            controller.getFormationData(), 
+            controller.getFormationSerializer()
+        );
+        dialog.show(stage);
+        updateStatus("Formation manager opened");
     }
 
     @Override

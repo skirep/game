@@ -3,6 +3,7 @@ package com.leveleditor.editor;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.leveleditor.model.EventType;
+import com.leveleditor.model.FormationData;
 import com.leveleditor.model.LevelData;
 import com.leveleditor.model.LevelEvent;
 
@@ -12,6 +13,8 @@ import com.leveleditor.model.LevelEvent;
 public class EditorController {
     private LevelData levelData;
     private LevelSerializer serializer;
+    private FormationData formationData;
+    private FormationSerializer formationSerializer;
     private TimelineView timelineView;
     private EventActor selectedActor;
     
@@ -23,9 +26,16 @@ public class EditorController {
         this.timelineView = timelineView;
         this.levelData = new LevelData(120f); // Default 2 minutes
         this.serializer = new LevelSerializer();
+        this.formationSerializer = new FormationSerializer();
         this.selectedActor = null;
         this.previewMode = false;
         this.previewTime = 0f;
+        
+        // Load formations
+        loadFormations();
+        
+        // Pass formation data to timeline view
+        timelineView.setFormationData(formationData);
     }
 
     /**
@@ -174,5 +184,40 @@ public class EditorController {
     
     public float getPreviewTime() {
         return previewTime;
+    }
+    
+    /**
+     * Loads formations from the formations.json file.
+     */
+    private void loadFormations() {
+        FileHandle file = Gdx.files.local("assets/formations.json");
+        formationData = formationSerializer.load(file);
+        System.out.println("Formations loaded: " + formationData.formations.size + " formations");
+        
+        // Update timeline view with new formation data
+        if (timelineView != null) {
+            timelineView.setFormationData(formationData);
+        }
+    }
+    
+    /**
+     * Reloads formations from file.
+     */
+    public void reloadFormations() {
+        loadFormations();
+    }
+    
+    /**
+     * Gets the formation data.
+     */
+    public FormationData getFormationData() {
+        return formationData;
+    }
+    
+    /**
+     * Gets the formation serializer.
+     */
+    public FormationSerializer getFormationSerializer() {
+        return formationSerializer;
     }
 }
