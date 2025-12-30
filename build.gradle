@@ -35,7 +35,9 @@ project(":desktop") {
     apply plugin: "java-library"
     apply plugin: "application"
 
-    mainClassName = "com.leveleditor.desktop.DesktopLauncher"
+    application {
+        mainClass = "com.leveleditor.desktop.DesktopLauncher"
+    }
 
     dependencies {
         implementation project(":core")

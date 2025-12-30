@@ -1,0 +1,33 @@
+{
+  "levelLength": 120,
+  "events": [
+    {
+      "time": 2.0,
+      "type": "ENEMY",
+      "x": 0.3,
+      "enemyType": "basic",
+      "formationId": "none"
+    },
+    {
+      "time": 5.0,
+      "type": "FORMATION",
+      "x": 0.5,
+      "enemyType": "basic",
+      "formationId": "V"
+    },
+    {
+      "time": 10.0,
+      "type": "POWER_UP",
+      "x": 0.7,
+      "enemyType": "basic",
+      "formationId": "none"
+    },
+    {
+      "time": 20.0,
+      "type": "BOSS",
+      "x": 0.5,
+      "enemyType": "boss1",
+      "formationId": "none"
+    }
+  ]
+}
