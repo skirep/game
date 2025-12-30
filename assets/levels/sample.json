@@ -16,11 +16,25 @@
       "formationId": "V"
     },
     {
+      "time": 8.0,
+      "type": "FORMATION",
+      "x": 0.3,
+      "enemyType": "fast",
+      "formationId": "line"
+    },
+    {
       "time": 10.0,
       "type": "POWER_UP",
       "x": 0.7,
       "enemyType": "basic",
       "formationId": "none"
+    },
+    {
+      "time": 15.0,
+      "type": "FORMATION",
+      "x": 0.6,
+      "enemyType": "tank",
+      "formationId": "circle"
     },
     {
       "time": 20.0,
