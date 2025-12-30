@@ -19,6 +19,16 @@ The Level Editor follows a clean MVC-like architecture with three main layers:
 - Provides methods to add/remove events and sort them by time
 - Uses LibGDX Array for efficient event storage
 
+**Formation.java**
+- Reusable enemy formation pattern definition
+- Contains: id (unique identifier), relativePositions (Array of Vector2), speed
+- Defines spatial arrangement of enemies in a formation
+
+**FormationData.java**
+- Container for all formation definitions
+- Provides methods to add/remove formations and lookup by ID
+- Saved separately as formations.json for reusability across levels
+
 ### Editor Layer (`com.leveleditor.editor`)
 
 **TimelineView.java**
@@ -26,11 +36,13 @@ The Level Editor follows a clean MVC-like architecture with three main layers:
 - Uses OrthographicCamera for zoom and pan functionality
 - Renders grid lines for time (horizontal) and position (vertical)
 - Handles coordinate transformations between screen and world space
+- Renders formation previews for FORMATION events
 - Key features:
   - PIXELS_PER_SECOND = 100 for vertical scaling
   - Grid lines at 1 second intervals (time) and 0.1 intervals (position)
   - Zoom range: 0.5x to 3x
   - Pan with right/middle mouse button
+  - Formation preview: small circles showing enemy positions relative to formation spawn point
 
 **EventActor.java**
 - Visual representation of events as colored circles
@@ -51,6 +63,7 @@ The Level Editor follows a clean MVC-like architecture with three main layers:
   - Event selection and deletion
   - Position updates when events are dragged
   - Save/load coordination with LevelSerializer
+  - Formation data loading and management
   - Preview mode state management
   - Automatic timeline scrolling during preview
   - Event triggering and highlighting during preview
@@ -60,13 +73,36 @@ The Level Editor follows a clean MVC-like architecture with three main layers:
 - Pretty-prints JSON for human readability
 - Handles file I/O errors gracefully
 
+**FormationSerializer.java**
+- JSON serialization/deserialization for formation definitions
+- Saves/loads formations.json separately from level files
+- Enables formation reusability across multiple levels
+
+**FormationManagerDialog.java**
+- UI dialog for managing formations (Create, Edit, Delete)
+- Provides list view of all available formations
+- Editor panel for defining formation properties:
+  - ID: Unique identifier for the formation
+  - Speed: Movement speed multiplier
+  - Positions: List of relative enemy positions (x,y coordinates)
+- Saves changes directly to formations.json
+- Input validation for formation IDs and position data
+
+**EventPropertiesDialog.java**
+- UI dialog for editing event-specific properties
+- Allows setting enemyType for all event types
+- For FORMATION events, provides dropdown to select formation ID
+- Displays read-only event information (type, time, position)
+
 **EditorScreen.java**
 - Main screen implementing LibGDX Screen interface
 - Creates UI using Scene2D widgets
 - Toolbar with buttons for:
   - File operations (New, Save, Load)
+  - Formation management (Manage Formations)
   - Preview mode (Play, Stop)
   - Event creation (Enemy, Formation, Boss, PowerUp)
+  - Event editing (Edit Properties)
   - Event deletion
 - Status label for user feedback
 - Coordinates input handling between UI and timeline
@@ -102,8 +138,30 @@ The Level Editor follows a clean MVC-like architecture with three main layers:
 
 ### File Format
 - JSON format for human readability and easy debugging
-- Files stored in assets/levels/ directory
-- Example structure documented in README
+- **Level files** stored in assets/levels/ directory (e.g., sample.json)
+  - Contains level length and events
+  - Events reference formations by ID only (decoupled design)
+- **Formation files** stored as assets/formations.json
+  - Contains all formation definitions with positions and speed
+  - Shared across all levels for reusability
+  - Clean separation of concerns
+- Example level structure documented in README
+- Example formation structure:
+```json
+{
+  "formations": [
+    {
+      "id": "V",
+      "relativePositions": [
+        {"x": 0.0, "y": 0.0},
+        {"x": -0.1, "y": 0.1},
+        {"x": 0.1, "y": 0.1}
+      ],
+      "speed": 1.0
+    }
+  ]
+}
+```
 
 ### UI Design
 - Scene2D for consistent UI framework
@@ -126,10 +184,13 @@ The architecture is designed for easy extension:
 
 1. **New Event Types**: Add to EventType enum and update EventActor color mapping
 2. **Event Properties**: Extend LevelEvent class with new fields
-3. **UI Enhancements**: Add new buttons/controls to EditorScreen
-4. **Validation**: Add rules in EditorController before saving
-5. **Export Formats**: Implement additional serializers alongside LevelSerializer
-6. **Preview Speed Control**: Add UI controls to adjust preview playback speed
+3. **New Formation Patterns**: Use Formation Manager UI to create patterns dynamically
+4. **Formation Algorithms**: Generate formation positions programmatically instead of manual entry
+5. **UI Enhancements**: Add new buttons/controls to EditorScreen
+6. **Validation**: Add rules in EditorController before saving
+7. **Export Formats**: Implement additional serializers alongside LevelSerializer
+8. **Preview Speed Control**: Add UI controls to adjust preview playback speed
+9. **Formation Preview Modes**: Enhanced visualization with colors, labels, or animations
 
 ## Testing Approach
 

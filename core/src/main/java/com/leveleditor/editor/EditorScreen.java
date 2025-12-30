@@ -91,6 +91,17 @@ public class EditorScreen implements Screen {
         });
         toolbar.add(loadButton);
 
+        // Manage Formations button
+        TextButton formationsButton = new TextButton("Manage Formations", skin);
+        formationsButton.getColor().set(0.3f, 0.6f, 1f, 1f); // Blue
+        formationsButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                openFormationManager();
+            }
+        });
+        toolbar.add(formationsButton);
+
         toolbar.add(new Label(" | ", skin));
         
         // Preview mode buttons
@@ -171,6 +182,17 @@ public class EditorScreen implements Screen {
         toolbar.add(addPowerUpButton);
 
         toolbar.add(new Label(" | ", skin));
+        
+        TextButton editPropertiesButton = new TextButton("Edit Properties", skin);
+        editPropertiesButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                editSelectedEventProperties();
+            }
+        });
+        toolbar.add(editPropertiesButton);
+
+        toolbar.add(new Label(" | ", skin));
 
         TextButton deleteButton = new TextButton("Delete", skin);
         deleteButton.addListener(new ClickListener() {
@@ -217,6 +239,39 @@ public class EditorScreen implements Screen {
         boolean isPreview = controller.isPreviewMode();
         playButton.setVisible(!isPreview);
         stopButton.setVisible(isPreview);
+    }
+    
+    /**
+     * Opens the formation manager dialog.
+     */
+    private void openFormationManager() {
+        FormationManagerDialog dialog = new FormationManagerDialog(
+            "Formation Manager", 
+            skin, 
+            controller.getFormationData(), 
+            controller.getFormationSerializer()
+        );
+        dialog.show(stage);
+        updateStatus("Formation manager opened");
+    }
+    
+    /**
+     * Opens the event properties dialog for the selected event.
+     */
+    private void editSelectedEventProperties() {
+        EventActor selectedActor = controller.getSelectedActor();
+        if (selectedActor != null) {
+            EventPropertiesDialog dialog = new EventPropertiesDialog(
+                "Edit Event Properties", 
+                skin, 
+                selectedActor.getEvent(), 
+                controller.getFormationData()
+            );
+            dialog.show(stage);
+            updateStatus("Editing event properties");
+        } else {
+            updateStatus("No event selected");
+        }
     }
 
     @Override

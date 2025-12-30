@@ -7,6 +7,9 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.leveleditor.model.EventType;
+import com.leveleditor.model.Formation;
+import com.leveleditor.model.FormationData;
 import com.leveleditor.model.LevelEvent;
 
 import com.badlogic.gdx.utils.Array;
@@ -40,6 +43,9 @@ public class TimelineView {
     
     // Preview mode state
     private boolean previewMode;
+    
+    // Formation data for rendering formation previews
+    private FormationData formationData;
 
     public TimelineView() {
         camera = new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
@@ -49,6 +55,7 @@ public class TimelineView {
         shapeRenderer = new ShapeRenderer();
         eventActors = new Array<>();
         previewMode = false;
+        formationData = null;
     }
 
     /**
@@ -127,6 +134,23 @@ public class TimelineView {
             actor.draw(shapeRenderer, 1f);
         }
         shapeRenderer.end();
+        
+        // Draw formation previews for FORMATION events
+        if (formationData != null) {
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+            shapeRenderer.setColor(Color.LIGHT_GRAY);
+            for (EventActor actor : eventActors) {
+                if (actor.getEvent().type == EventType.FORMATION && 
+                    actor.getEvent().formationId != null && 
+                    !actor.getEvent().formationId.equals("none")) {
+                    Formation formation = formationData.getFormationById(actor.getEvent().formationId);
+                    if (formation != null) {
+                        drawFormationPreview(actor.getEvent(), formation);
+                    }
+                }
+            }
+            shapeRenderer.end();
+        }
     }
 
     /**
@@ -234,6 +258,29 @@ public class TimelineView {
      */
     public void setPreviewMode(boolean previewMode) {
         this.previewMode = previewMode;
+    }
+    
+    /**
+     * Sets the formation data for rendering formation previews.
+     */
+    public void setFormationData(FormationData formationData) {
+        this.formationData = formationData;
+    }
+    
+    /**
+     * Draws a visual preview of a formation on the timeline.
+     */
+    private void drawFormationPreview(LevelEvent event, Formation formation) {
+        float baseX = normalizedXToScreen(event.x);
+        float baseY = timeToY(event.time);
+        float previewScale = 30f; // Scale factor for preview visualization
+        
+        // Draw small circles for each enemy in the formation
+        for (Vector2 relPos : formation.relativePositions) {
+            float enemyX = baseX + relPos.x * previewScale;
+            float enemyY = baseY + relPos.y * previewScale;
+            shapeRenderer.circle(enemyX, enemyY, 5f);
+        }
     }
 
     public void dispose() {
