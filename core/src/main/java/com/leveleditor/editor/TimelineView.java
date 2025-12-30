@@ -37,6 +37,9 @@ public class TimelineView {
     private boolean isPanning = false;
 
     private Array<EventActor> eventActors;
+    
+    // Preview mode state
+    private boolean previewMode;
 
     public TimelineView() {
         camera = new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
@@ -45,12 +48,18 @@ public class TimelineView {
         
         shapeRenderer = new ShapeRenderer();
         eventActors = new Array<>();
+        previewMode = false;
     }
 
     /**
      * Handles input for panning and zooming.
      */
     public void handleInput() {
+        // Disable manual controls in preview mode
+        if (previewMode) {
+            return;
+        }
+        
         // Zoom with mouse wheel
         int scrollAmount = Gdx.input.getDeltaY();
         if (scrollAmount != 0) {
@@ -201,6 +210,30 @@ public class TimelineView {
 
     public OrthographicCamera getCamera() {
         return camera;
+    }
+    
+    /**
+     * Scrolls the camera to center on the given time.
+     */
+    public void scrollToTime(float time) {
+        float targetY = timeToY(time);
+        camera.position.y = targetY;
+        camera.update();
+    }
+    
+    /**
+     * Resets the camera to the start position (time 0).
+     */
+    public void resetCameraToStart() {
+        camera.position.set(VIEWPORT_WIDTH / 2, VIEWPORT_HEIGHT / 2, 0);
+        camera.update();
+    }
+    
+    /**
+     * Sets whether preview mode is active.
+     */
+    public void setPreviewMode(boolean previewMode) {
+        this.previewMode = previewMode;
     }
 
     public void dispose() {
