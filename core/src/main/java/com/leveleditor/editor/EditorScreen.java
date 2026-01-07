@@ -2,15 +2,23 @@ package com.leveleditor.editor;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.leveleditor.model.EventType;
 
 /**
@@ -21,6 +29,10 @@ public class EditorScreen implements Screen {
     private TimelineView timelineView;
     private EditorController controller;
     private Skin skin;
+
+    // Dragging state (EventActor is not part of the Stage)
+    private EventActor draggingActor;
+    private final Vector2 dragOffset = new Vector2();
 
     // UI elements
     private Label statusLabel;
@@ -35,10 +47,71 @@ public class EditorScreen implements Screen {
         
         // Create a simple skin for UI
         skin = new Skin(Gdx.files.internal("uiskin.json"));
+
+        // Use a scalable font on HiDPI displays so text doesn't become blocky.
+        applyHiDpiSkinFont();
         
         createUI();
-        
-        Gdx.input.setInputProcessor(stage);
+
+        InputMultiplexer multiplexer = new InputMultiplexer();
+        multiplexer.addProcessor(stage);
+        multiplexer.addProcessor(new InputAdapter() {
+            @Override
+            public boolean scrolled(float amountX, float amountY) {
+                timelineView.addScroll(amountY);
+                return false;
+            }
+        });
+        Gdx.input.setInputProcessor(multiplexer);
+    }
+
+    private void applyHiDpiSkinFont() {
+        try {
+            float density = Gdx.graphics.getDensity();
+            // Generate at least 16px; scale up on HiDPI.
+            int fontSize = Math.max(16, Math.round(16f * density));
+
+            FreeTypeFontGenerator generator = new FreeTypeFontGenerator(
+                Gdx.files.internal("fonts/NotoSans-Regular.ttf")
+            );
+            FreeTypeFontGenerator.FreeTypeFontParameter params = new FreeTypeFontGenerator.FreeTypeFontParameter();
+            params.size = fontSize;
+            params.magFilter = Texture.TextureFilter.Linear;
+            params.minFilter = Texture.TextureFilter.Linear;
+            params.color = Color.WHITE;
+
+            BitmapFont uiFont = generator.generateFont(params);
+            generator.dispose();
+
+            skin.add("ui-font", uiFont, BitmapFont.class);
+
+            // Replace fonts in the common styles.
+            if (skin.has("default", Label.LabelStyle.class)) {
+                skin.get(Label.LabelStyle.class).font = uiFont;
+            }
+            if (skin.has("default", TextButton.TextButtonStyle.class)) {
+                skin.get(TextButton.TextButtonStyle.class).font = uiFont;
+            }
+            if (skin.has("default", TextField.TextFieldStyle.class)) {
+                skin.get(TextField.TextFieldStyle.class).font = uiFont;
+            }
+            if (skin.has("default", Window.WindowStyle.class)) {
+                skin.get(Window.WindowStyle.class).titleFont = uiFont;
+            }
+            if (skin.has("default", List.ListStyle.class)) {
+                skin.get(List.ListStyle.class).font = uiFont;
+            }
+            if (skin.has("default", SelectBox.SelectBoxStyle.class)) {
+                SelectBox.SelectBoxStyle style = skin.get(SelectBox.SelectBoxStyle.class);
+                style.font = uiFont;
+                if (style.listStyle != null) {
+                    style.listStyle.font = uiFont;
+                }
+            }
+        } catch (Exception e) {
+            // If font generation fails, fall back to the bundled bitmap font.
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -47,11 +120,14 @@ public class EditorScreen implements Screen {
     private void createUI() {
         Table rootTable = new Table();
         rootTable.setFillParent(true);
+        // Important: the root table fills the whole screen; avoid it eating clicks.
+        rootTable.setTouchable(Touchable.childrenOnly);
         stage.addActor(rootTable);
 
         // Top toolbar
         Table toolbar = new Table();
         toolbar.defaults().pad(5);
+        toolbar.setTouchable(Touchable.childrenOnly);
 
         // File operations
         Label fileLabel = new Label("File:", skin);
@@ -207,9 +283,12 @@ public class EditorScreen implements Screen {
         // Status label
         statusLabel = new Label("Level Editor Ready", skin);
         statusLabel.setColor(Color.LIGHT_GRAY);
+        statusLabel.setTouchable(Touchable.disabled);
 
         // Layout
         rootTable.add(toolbar).top().expandX().fillX().row();
+        // Spacer row so the status label stays at the bottom
+        rootTable.add().expand().fill().row();
         rootTable.add(statusLabel).bottom().left().pad(10).row();
     }
 
@@ -322,6 +401,14 @@ public class EditorScreen implements Screen {
 
         // Handle event selection with left click
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            // Ignore clicks on UI elements
+            Vector2 stageCoords = stage.screenToStageCoordinates(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
+            Actor hit = stage.hit(stageCoords.x, stageCoords.y, true);
+            if (hit != null) {
+                draggingActor = null;
+                return;
+            }
+
             Vector3 worldPos = timelineView.screenToWorld(Gdx.input.getX(), Gdx.input.getY());
             
             EventActor clickedActor = null;
@@ -338,21 +425,43 @@ public class EditorScreen implements Screen {
             
             if (clickedActor != null) {
                 controller.selectEventActor(clickedActor);
+                draggingActor = clickedActor;
+                dragOffset.set(worldPos.x - clickedActor.getX(), worldPos.y - clickedActor.getY());
                 updateStatus("Selected " + clickedActor.getEvent().type + " event");
             } else {
                 controller.deselectAll();
+                draggingActor = null;
             }
         }
 
+        // Drag selected event while holding left mouse button
+        if (draggingActor != null && Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
+            Vector3 worldPos = timelineView.screenToWorld(Gdx.input.getX(), Gdx.input.getY());
+
+            float newX = worldPos.x - dragOffset.x;
+            float newY = worldPos.y - dragOffset.y;
+
+            float maxX = timelineView.getViewportWidth() - EventActor.getEventSize();
+            newX = Math.max(0f, Math.min(maxX, newX));
+            newY = Math.max(0f, newY);
+
+            draggingActor.setPosition(newX, newY);
+        }
+
         // Update event positions when mouse is released after dragging
-        if (!Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
+        if (draggingActor != null && !Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
             controller.updateEventPositions();
+            draggingActor = null;
         }
     }
 
     @Override
     public void resize(int width, int height) {
-        stage.getViewport().update(width, height, true);
+        // Use backbuffer size to avoid implicit DPI scaling blur.
+        int backBufferWidth = Gdx.graphics.getBackBufferWidth();
+        int backBufferHeight = Gdx.graphics.getBackBufferHeight();
+        stage.getViewport().update(backBufferWidth, backBufferHeight, true);
+        timelineView.resize(backBufferWidth, backBufferHeight);
     }
 
     @Override

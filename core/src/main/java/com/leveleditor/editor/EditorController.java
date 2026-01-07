@@ -38,6 +38,14 @@ public class EditorController {
         timelineView.setFormationData(formationData);
     }
 
+    private FileHandle getLocalLevelFile(String filename) {
+        return Gdx.files.local("levels/" + filename);
+    }
+
+    private FileHandle getInternalLevelFile(String filename) {
+        return Gdx.files.internal("levels/" + filename);
+    }
+
     /**
      * Creates a new level event at the specified position and time.
      */
@@ -96,7 +104,8 @@ public class EditorController {
      * Saves the current level to a file.
      */
     public void saveLevel(String filename) {
-        FileHandle file = Gdx.files.local("assets/levels/" + filename);
+        FileHandle file = getLocalLevelFile(filename);
+        file.parent().mkdirs();
         serializer.save(levelData, file);
         System.out.println("Level saved to: " + file.path());
     }
@@ -105,7 +114,13 @@ public class EditorController {
      * Loads a level from a file.
      */
     public void loadLevel(String filename) {
-        FileHandle file = Gdx.files.local("assets/levels/" + filename);
+        FileHandle file = getLocalLevelFile(filename);
+        if (!file.exists()) {
+            FileHandle internal = getInternalLevelFile(filename);
+            if (internal.exists()) {
+                file = internal;
+            }
+        }
         levelData = serializer.load(file);
         
         // Clear existing actors
@@ -190,7 +205,10 @@ public class EditorController {
      * Loads formations from the formations.json file.
      */
     private void loadFormations() {
-        FileHandle file = Gdx.files.local("assets/formations.json");
+        FileHandle file = Gdx.files.local("formations.json");
+        if (!file.exists()) {
+            file = Gdx.files.internal("formations.json");
+        }
         formationData = formationSerializer.load(file);
         System.out.println("Formations loaded: " + formationData.formations.size + " formations");
         

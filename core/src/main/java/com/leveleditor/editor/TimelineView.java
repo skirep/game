@@ -22,9 +22,9 @@ public class TimelineView {
     private OrthographicCamera camera;
     private ShapeRenderer shapeRenderer;
     
-    // View dimensions
-    private static final float VIEWPORT_WIDTH = 800f;
-    private static final float VIEWPORT_HEIGHT = 600f;
+    // View dimensions (in world units; we use 1 world unit = 1 pixel)
+    private float viewportWidth;
+    private float viewportHeight;
     
     // Grid settings
     private static final float PIXELS_PER_SECOND = 100f; // Vertical scaling
@@ -39,6 +39,9 @@ public class TimelineView {
     private Vector2 lastDragPos = new Vector2();
     private boolean isPanning = false;
 
+    // Mouse wheel scroll accumulated via InputProcessor (EditorScreen InputMultiplexer)
+    private float pendingScrollY = 0f;
+
     private Array<EventActor> eventActors;
     
     // Preview mode state
@@ -48,11 +51,16 @@ public class TimelineView {
     private FormationData formationData;
 
     public TimelineView() {
-        camera = new OrthographicCamera(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
-        camera.position.set(VIEWPORT_WIDTH / 2, VIEWPORT_HEIGHT / 2, 0);
+        viewportWidth = Gdx.graphics.getWidth();
+        viewportHeight = Gdx.graphics.getHeight();
+
+        camera = new OrthographicCamera(viewportWidth, viewportHeight);
+        camera.position.set(viewportWidth / 2f, viewportHeight / 2f, 0);
         camera.update();
         
         shapeRenderer = new ShapeRenderer();
+        // EventActor switches between Filled/Line while drawing.
+        shapeRenderer.setAutoShapeType(true);
         eventActors = new Array<>();
         previewMode = false;
         formationData = null;
@@ -68,8 +76,9 @@ public class TimelineView {
         }
         
         // Zoom with mouse wheel
-        int scrollAmount = Gdx.input.getDeltaY();
-        if (scrollAmount != 0) {
+        float scrollAmount = pendingScrollY;
+        pendingScrollY = 0f;
+        if (scrollAmount != 0f) {
             zoom += scrollAmount * 0.1f;
             zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom));
             camera.zoom = zoom;
@@ -98,6 +107,13 @@ public class TimelineView {
     }
 
     /**
+     * Called by an InputProcessor when the mouse wheel is scrolled.
+     */
+    public void addScroll(float amountY) {
+        pendingScrollY += amountY;
+    }
+
+    /**
      * Renders the timeline grid.
      */
     public void render() {
@@ -110,20 +126,20 @@ public class TimelineView {
 
         // Vertical grid lines (X position)
         for (float x = 0; x <= 1.0f; x += X_GRID_STEP) {
-            float screenX = x * VIEWPORT_WIDTH;
+            float screenX = x * viewportWidth;
             shapeRenderer.line(screenX, 0, screenX, 10000); // Draw long lines
         }
 
         // Horizontal grid lines (time)
-        float viewBottom = camera.position.y - VIEWPORT_HEIGHT / 2 * zoom;
-        float viewTop = camera.position.y + VIEWPORT_HEIGHT / 2 * zoom;
-        
-        int startTime = (int) (viewBottom / PIXELS_PER_SECOND);
-        int endTime = (int) (viewTop / PIXELS_PER_SECOND) + 1;
-        
-        for (int t = startTime; t <= endTime; t++) {
+        float viewBottom = camera.position.y - viewportHeight / 2f * zoom;
+        float viewTop = camera.position.y + viewportHeight / 2f * zoom;
+
+        float startTime = (float) Math.floor((viewBottom / PIXELS_PER_SECOND) / TIME_GRID_STEP) * TIME_GRID_STEP;
+        float endTime = (float) Math.ceil((viewTop / PIXELS_PER_SECOND) / TIME_GRID_STEP) * TIME_GRID_STEP;
+
+        for (float t = startTime; t <= endTime; t += TIME_GRID_STEP) {
             float screenY = t * PIXELS_PER_SECOND;
-            shapeRenderer.line(0, screenY, VIEWPORT_WIDTH, screenY);
+            shapeRenderer.line(0, screenY, viewportWidth, screenY);
         }
 
         shapeRenderer.end();
@@ -171,21 +187,23 @@ public class TimelineView {
      * Converts normalized X position (0-1) to screen X coordinate.
      */
     public float normalizedXToScreen(float normalizedX) {
-        return normalizedX * VIEWPORT_WIDTH;
+        return normalizedX * viewportWidth;
     }
 
     /**
      * Converts screen X coordinate to normalized position (0-1).
      */
     public float screenXToNormalized(float screenX) {
-        return Math.max(0, Math.min(1.0f, screenX / VIEWPORT_WIDTH));
+        return Math.max(0, Math.min(1.0f, screenX / viewportWidth));
     }
 
     /**
      * Converts screen coordinates to world coordinates.
      */
     public Vector3 screenToWorld(float screenX, float screenY) {
-        return camera.unproject(new Vector3(screenX, screenY, 0));
+        // LibGDX input Y is top-left origin, but unproject expects bottom-left.
+        float flippedY = Gdx.graphics.getHeight() - screenY;
+        return camera.unproject(new Vector3(screenX, flippedY, 0));
     }
 
     /**
@@ -249,8 +267,31 @@ public class TimelineView {
      * Resets the camera to the start position (time 0).
      */
     public void resetCameraToStart() {
-        camera.position.set(VIEWPORT_WIDTH / 2, VIEWPORT_HEIGHT / 2, 0);
+        camera.position.set(viewportWidth / 2f, viewportHeight / 2f, 0);
         camera.update();
+    }
+
+    /**
+     * Updates the timeline viewport to match the window size.
+     */
+    public void resize(int width, int height) {
+        if (width <= 0 || height <= 0) {
+            return;
+        }
+
+        viewportWidth = width;
+        viewportHeight = height;
+        camera.viewportWidth = viewportWidth;
+        camera.viewportHeight = viewportHeight;
+        camera.update();
+    }
+
+    public float getViewportWidth() {
+        return viewportWidth;
+    }
+
+    public float getViewportHeight() {
+        return viewportHeight;
     }
     
     /**

@@ -218,7 +218,8 @@ public class FormationManagerDialog extends Dialog {
             currentFormation = formation;
 
             // Save to file
-            FileHandle file = Gdx.files.local("assets/formations.json");
+            FileHandle file = Gdx.files.local("formations.json");
+            file.parent().mkdirs();
             serializer.save(formationData, file);
 
             refreshFormationList();
@@ -239,7 +240,8 @@ public class FormationManagerDialog extends Dialog {
                 formationData.removeFormation(formation);
 
                 // Save to file
-                FileHandle file = Gdx.files.local("assets/formations.json");
+                FileHandle file = Gdx.files.local("formations.json");
+                file.parent().mkdirs();
                 serializer.save(formationData, file);
 
                 refreshFormationList();
