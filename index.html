@@ -1,121 +1,264 @@
 <!DOCTYPE html>
-<html lang="ca">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Retro Kong Platform</title>
+<title>Retro Kong Arcade</title>
 <style>
-body { margin:0; background:#222; overflow:hidden; font-family:Arial; }
-canvas { background:#87CEEB; display:block; margin:auto; touch-action:none; }
-#controls {
- position:fixed; bottom:20px; width:100%; display:flex; justify-content:space-between;
+body {
+ margin:0;
+ overflow:hidden;
+ background:black;
+ font-family:monospace;
 }
-.left-controls, .right-controls { display:flex; gap:10px; padding:0 20px; }
+canvas {
+ display:block;
+ margin:auto;
+ background:#101820;
+ image-rendering: pixelated;
+ image-rendering: crisp-edges;
+ touch-action:none;
+}
+#controls {
+ position:fixed;
+ bottom:10px;
+ width:100%;
+ display:flex;
+ justify-content:space-between;
+ pointer-events:none;
+}
+.group {
+ display:flex;
+ gap:10px;
+ padding:15px;
+ pointer-events:auto;
+}
 button {
- width:70px; height:70px; border:none; border-radius:50%; font-size:24px;
- background:rgba(255,255,255,0.7);
+ width:72px;
+ height:72px;
+ border-radius:50%;
+ border:none;
+ background:rgba(255,255,255,0.15);
+ color:white;
+ font-size:28px;
+ backdrop-filter:blur(3px);
 }
 </style>
 </head>
 <body>
 <canvas id="game" width="960" height="540"></canvas>
 <div id="controls">
- <div class="left-controls">
+ <div class="group">
   <button id="left">◀</button>
   <button id="right">▶</button>
  </div>
- <div class="right-controls">
+ <div class="group">
   <button id="jump">▲</button>
  </div>
 </div>
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+const SCALE = 4;
 const keys = {};
-const player = {x:50,y:450,w:30,h:40,vx:0,vy:0,onGround:false};
-const kong = {x:800,y:80,w:80,h:80};
+
+const player = {
+ x:50,
+ y:450,
+ w:16*SCALE,
+ h:16*SCALE,
+ vx:0,
+ vy:0,
+ onGround:false
+};
+
+const kong = {
+ x:760,
+ y:50,
+ w:32*SCALE,
+ h:32*SCALE
+};
+
 const gravity = 0.7;
+const barrels = [];
+let score = 0;
+
 const platforms = [
-{x:0,y:500,w:960,h:40},
-{x:150,y:400,w:250,h:20},
-{x:500,y:320,w:250,h:20},
-{x:200,y:220,w:250,h:20},
-{x:600,y:140,w:250,h:20}
+ {x:0,y:500,w:960,h:40},
+ {x:150,y:410,w:300,h:20},
+ {x:500,y:320,w:300,h:20},
+ {x:180,y:230,w:300,h:20},
+ {x:520,y:140,w:300,h:20}
 ];
-const barrels=[];
-let score=0;
-setInterval(()=>{
- barrels.push({x:kong.x,y:kong.y+40,r:12,vx:-4});
-},2000);
-function input(){
- player.vx=0;
- if(keys.left) player.vx=-5;
- if(keys.right) player.vx=5;
+
+const heroSprite = [
+ '....RRRR....',
+ '...RYYYYR...',
+ '..RYYYYYYR..',
+ '..RRBBBBRR..',
+ '..BBBBBBBB..',
+ '..BBWWWWBB..',
+ '..BBWWWWBB..',
+ '..BBBBBBBB..',
+ '...BB..BB...',
+ '..RRR..RRR..',
+ '.RRR....RRR.',
+ '.WW......WW.',
+ '............'
+];
+
+const kongSprite = [
+ '..BBBBBBBB....',
+ '.BBBBBBBBBB...',
+ '.BBWWWWWWBB...',
+ '.BBBBBBBBBB...',
+ '.BBBBOOBBBB...',
+ '..BBBBBBBB....',
+ '.BBBB..BBBB...',
+ 'BBBB....BBBB..',
+ 'BB........BB..'
+];
+
+function drawSprite(sprite, x, y, pixel=4){
+ const colors = {
+  R:'#d94b4b',
+  Y:'#ffd84d',
+  B:'#7b4b20',
+  W:'#ffffff',
+  O:'#000000',
+  '.':null
+ };
+
+ sprite.forEach((row, ry)=>{
+  [...row].forEach((c, rx)=>{
+   if(colors[c]){
+    ctx.fillStyle = colors[c];
+    ctx.fillRect(x + rx*pixel, y + ry*pixel, pixel, pixel);
+   }
+  });
+ });
 }
+
+setInterval(()=>{
+ barrels.push({x:kong.x+40,y:kong.y+80,r:14,vx:-5});
+},1800);
+
+function input(){
+ player.vx = 0;
+ if(keys.left) player.vx = -5;
+ if(keys.right) player.vx = 5;
+}
+
 function update(){
  input();
  player.vy += gravity;
  player.x += player.vx;
  player.y += player.vy;
- player.onGround=false;
+
+ player.onGround = false;
+
  for(const p of platforms){
-  if(player.x < p.x+p.w && player.x+player.w > p.x && player.y+player.h < p.y+20 && player.y+player.h+player.vy >= p.y){
-   player.y = p.y-player.h;
-   player.vy=0;
-   player.onGround=true;
+  if(player.x < p.x+p.w &&
+     player.x+player.w > p.x &&
+     player.y+player.h < p.y+25 &&
+     player.y+player.h+player.vy >= p.y){
+      player.y = p.y-player.h;
+      player.vy = 0;
+      player.onGround = true;
   }
  }
- barrels.forEach(b=>b.x+=b.vx);
+
+ barrels.forEach(b=>b.x += b.vx);
+
  for(const b of barrels){
-  const dx=(player.x+15)-(b.x+b.r);
-  const dy=(player.y+20)-(b.y+b.r);
-  if(Math.sqrt(dx*dx+dy*dy)<25){
-   alert('Game Over! Score: '+score);
+  const dx = (player.x+32) - b.x;
+  const dy = (player.y+32) - b.y;
+  if(Math.sqrt(dx*dx + dy*dy) < 35){
+   alert('GAME OVER - SCORE: '+score);
    location.reload();
   }
  }
- if(player.x>kong.x && player.y<kong.y+kong.h){
-  alert('Has guanyat!');
+
+ if(player.x > kong.x && player.y < kong.y+80){
+  alert('YOU SAVED THE PRINCESS!');
   location.reload();
  }
+
  score++;
 }
+
+function drawBackground(){
+ for(let i=0;i<canvas.width;i+=32){
+  ctx.fillStyle = i % 64 === 0 ? '#111' : '#181818';
+  ctx.fillRect(i,0,32,canvas.height);
+ }
+}
+
 function draw(){
  ctx.clearRect(0,0,canvas.width,canvas.height);
- ctx.fillStyle='#654321';
+ drawBackground();
+
+ ctx.fillStyle = '#ff4d4d';
  platforms.forEach(p=>ctx.fillRect(p.x,p.y,p.w,p.h));
- ctx.fillStyle='red';
- ctx.fillRect(player.x,player.y,player.w,player.h);
- ctx.fillStyle='brown';
- ctx.fillRect(kong.x,kong.y,kong.w,kong.h);
- ctx.fillStyle='black';
- barrels.forEach(b=>{ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();});
+
+ drawSprite(heroSprite, player.x, player.y, SCALE);
+ drawSprite(kongSprite, kong.x, kong.y, SCALE);
+
+ barrels.forEach(b=>{
+  ctx.fillStyle='#a0522d';
+  ctx.beginPath();
+  ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.strokeStyle='#000';
+  ctx.stroke();
+ });
+
  ctx.fillStyle='white';
- ctx.font='24px Arial';
- ctx.fillText('Score: '+score,20,30);
+ ctx.font='28px monospace';
+ ctx.fillText('SCORE '+score,20,40);
+ ctx.fillText('RETRO KONG',700,40);
 }
+
 function loop(){
- update(); draw(); requestAnimationFrame(loop);
+ update();
+ draw();
+ requestAnimationFrame(loop);
 }
+
 loop();
+
 window.addEventListener('keydown',e=>{
  if(e.code==='ArrowLeft') keys.left=true;
  if(e.code==='ArrowRight') keys.right=true;
- if(e.code==='Space' && player.onGround) player.vy=-12;
+ if(e.code==='Space' && player.onGround) player.vy=-14;
 });
+
 window.addEventListener('keyup',e=>{
  if(e.code==='ArrowLeft') keys.left=false;
  if(e.code==='ArrowRight') keys.right=false;
 });
-function bind(id,action){
- const el=document.getElementById(id);
- el.addEventListener('touchstart',e=>{e.preventDefault();keys[action]=true;});
- el.addEventListener('touchend',e=>{e.preventDefault();keys[action]=false;});
+
+function bind(id,key){
+ const el = document.getElementById(id);
+ el.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  keys[key]=true;
+ });
+ el.addEventListener('touchend',e=>{
+  e.preventDefault();
+  keys[key]=false;
+ });
 }
+
 bind('left','left');
 bind('right','right');
+
 document.getElementById('jump').addEventListener('touchstart',e=>{
- e.preventDefault(); if(player.onGround) player.vy=-12;
+ e.preventDefault();
+ if(player.onGround) player.vy=-14;
 });
 </script>
 </body>
